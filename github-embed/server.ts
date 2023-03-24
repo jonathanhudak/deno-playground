@@ -1,5 +1,4 @@
 import { Application, Router } from "oak";
-import { generate as generateV1 } from "https://deno.land/std@0.181.0/uuid/v1.ts";
 import { bundleModule } from "./bundler.ts";
 const app = new Application();
 const router = new Router();
@@ -27,6 +26,7 @@ router.get("/", (context) => {
 });
 
 // Handle form submission and generate the JavaScript to embed the Markdown
+// Handle form submission and generate the JavaScript to embed the Markdown
 router.post("/embed", async (context) => {
   const body = await context.request.body({ type: "form" }).value;
   const githubUrl = body.get("github-url");
@@ -39,7 +39,7 @@ router.post("/embed", async (context) => {
   const [, , , repoOwner, repoName, , ...filePathParts] = githubUrl.split("/");
   const filePath = filePathParts.join("/");
 
-  const scriptId = generateV1();
+  const scriptId = btoa(`${repoOwner}:${repoName}:${filePath}`);
 
   context.response.body = `
     <!DOCTYPE html>
@@ -51,42 +51,35 @@ router.post("/embed", async (context) => {
     </head>
     <body>
         <h1>Embed this script on your webpage</h1>
-        <pre><code>&lt;script src="${context.request.url.origin}/embed-script/${scriptId}"&gt;&lt;/script&gt;</code></pre>
+        <pre>
+            <code>
+            &lt;div id="markdown-container"&gt;&lt;/div&gt;
+            &lt;script type="module" src="${context.request.url.origin}/embed-script/${scriptId}"&gt;&lt;/script&gt;
+            </code>
+        </pre>
         <div id="markdown-container"></div>
         <script type="module" src="/embed-script/${scriptId}"></script>
     </body>
     </html>
   `;
-
-  // Store the generated script in memory
-  generatedScripts.set(scriptId, {
-    repoOwner,
-    repoName,
-    filePath,
-  });
 });
 
-// Serve the generated script
-const generatedScripts = new Map<
-  string,
-  { repoOwner: string; repoName: string; filePath: string }
->();
-
 router.get("/embed-script/:scriptId", async (context) => {
-  const script = generatedScripts.get(context.params.scriptId!);
+  const scriptId = context.params.scriptId!;
 
-  if (!script) {
-    context.throw(404, "Script not found");
+  if (!scriptId) {
+    context.throw(400, "Script ID is required");
     return;
   }
 
-  const { repoOwner, repoName, filePath } = script;
+  const [repoOwner, repoName, filePath] = atob(scriptId).split(":");
 
   try {
     const bundledMarkdownModule = await bundleModule(
       new URL("./markdown.ts", import.meta.url).href
     );
 
+    context.response.headers.set("Access-Control-Allow-Origin", "*");
     context.response.headers.set("Content-Type", "application/javascript");
     context.response.body = `
         ${bundledMarkdownModule}
@@ -103,6 +96,22 @@ router.get("/embed-script/:scriptId", async (context) => {
 
 app.use(router.routes());
 app.use(router.allowedMethods());
+
+// CORS middleware
+app.use(async (context, next) => {
+  context.response.headers.set("Access-Control-Allow-Origin", "*");
+  context.response.headers.set(
+    "Access-Control-Allow-Methods",
+    "GET, POST, OPTIONS"
+  );
+  context.response.headers.set("Access-Control-Allow-Headers", "Content-Type");
+
+  if (context.request.method === "OPTIONS") {
+    context.response.status = 204;
+  } else {
+    await next();
+  }
+});
 
 const port = 8000;
 console.log(`Server listening on port ${port}`);
