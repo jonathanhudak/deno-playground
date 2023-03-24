@@ -1,0 +1,11 @@
+{
+    "tasks": {
+        "serve": "deno run --watch --allow-net --allow-env --allow-read server.ts"
+    },
+    "imports": {
+        "marked": "https://esm.sh/marked@4.2.12",
+        "highlight": "https://esm.sh/highlight@0.2.4",
+        "oak": "https://deno.land/x/oak/mod.ts",
+        "uuid": "https://deno.land/std/uuid/mod.ts"
+    }
+}
