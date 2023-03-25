@@ -3,23 +3,33 @@ import { bundleModule } from "./bundler.ts";
 const app = new Application();
 const router = new Router();
 
+const head = `
+<head>
+<meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Markdown Embedder</title>
+<link rel="stylesheet" href="https://the.missing.style"> 
+<link rel="stylesheet" href="https://missing.style/missing-prism.css"> 
+</head>
+`;
+
 // Serve the landing page with the form
 router.get("/", (context) => {
   context.response.body = `
     <!DOCTYPE html>
     <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Markdown Embedder</title>
-    </head>
+    ${head}
     <body>
+    <main>
         <h1>Embed Markdown from GitHub</h1>
-        <form action="/embed" method="post">
-            <label for="github-url">GitHub URL:</label>
-            <input type="text" id="github-url" name="github-url" required>
+        <form action="/embed" method="post" class="grid">
+            <label for="github-url">GitHub URL:
+            
+            <input class="width:100%" type="text" id="github-url" name="github-url" required>
             <button type="submit">Submit</button>
+            </label>
         </form>
+        </main>
     </body>
     </html>
   `;
@@ -44,21 +54,19 @@ router.post("/embed", async (context) => {
   context.response.body = `
     <!DOCTYPE html>
     <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Embed Script</title>
-    </head>
+    
+    ${head}
     <body>
+    <main>
         <h1>Embed this script on your webpage</h1>
-        <pre>
-            <code>
-            &lt;div id="markdown-container"&gt;&lt;/div&gt;
-            &lt;script type="module" src="${context.request.url.origin}/embed-script/${scriptId}"&gt;&lt;/script&gt;
-            </code>
+        <pre><code>
+&lt;div id="markdown-container"&gt;&lt;/div&gt;
+&lt;script type="module" src="${context.request.url.origin}/embed-script/${scriptId}"&gt;&lt;/script&gt;
+</code>
         </pre>
-        <div id="markdown-container"></div>
+        <div id="markdown-container" class="box"></div>
         <script type="module" src="/embed-script/${scriptId}"></script>
+        </main>
     </body>
     </html>
   `;
