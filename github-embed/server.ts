@@ -71,7 +71,7 @@ router.post("/embed", async (context) => {
   `;
 });
 
-router.get("/embed-script/:scriptId", (context) => {
+router.get("/embed-script/:scriptId", async (context) => {
   const scriptId = context.params.scriptId!;
 
   if (!scriptId) {
@@ -82,7 +82,7 @@ router.get("/embed-script/:scriptId", (context) => {
   const [repoOwner, repoName, filePath] = atob(scriptId).split(":");
 
   try {
-    const markdownModule = Deno.readTextFileSync(`./dist/markdown.esm.js`);
+    const markdownModule = await Deno.readTextFile("./dist/markdown.esm.js");
 
     context.response.headers.set("Access-Control-Allow-Origin", "*");
     context.response.headers.set("Content-Type", "application/javascript");
