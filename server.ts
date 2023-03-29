@@ -49,6 +49,7 @@ router.post("/embed", async (context) => {
   const filePath = filePathParts.join("/");
 
   const scriptId = btoa(`${repoOwner}:${repoName}:${filePath}`);
+  const snippet = `&lt;div id="ghe-${scriptId}"&gt;&lt;/div&gt;&lt;script type="module" src="${context.request.url.origin}/embed-script/${scriptId}"&gt;&lt;/script&gt;`;
 
   context.response.body = `
     <!DOCTYPE html>
@@ -58,14 +59,27 @@ router.post("/embed", async (context) => {
     <body>
     <main>
         <h1>Embed this script on your webpage</h1>
-        <pre><code>
-&lt;div id="markdown-container"&gt;&lt;/div&gt;
-&lt;script type="module" src="${context.request.url.origin}/embed-script/${scriptId}"&gt;&lt;/script&gt;
-</code>
-        </pre>
-        <div id="markdown-container" class="box"></div>
+        <h2>Snippet</h2>
+        <strong>URL</strong>: <a href="${githubUrl}">${githubUrl}</a>
+        <label for="snippet">Embed Code</label>        
+        <textarea id="snippet">${snippet}</textarea>
+        <button id="copyButton">Copy snippet</button>
+
+        <h2>Preview</h2>
+        <div id="ghe-${scriptId}" class="box"></div>
         <script type="module" src="/embed-script/${scriptId}"></script>
-        </main>
+        <script>
+        function copyToClipboard() {
+          const textToCopy = document.getElementById('snippet');
+          textToCopy.select();
+          textToCopy.setSelectionRange(0, 99999); // For mobile devices
+          document.execCommand('copy');
+          alert('Snippet to you clipboard!');
+        }
+    
+        document.getElementById('copyButton').addEventListener('click', copyToClipboard);
+        </script>
+      </main>
     </body>
     </html>
   `;
@@ -89,7 +103,7 @@ router.get("/embed-script/:scriptId", async (context) => {
   
         (async function() {
           const containerId = "markdown-container";
-          await embedMarkdownFromGithub("${repoOwner}", "${repoName}", "${filePath}", containerId);
+          await embedMarkdownFromGithub("${repoOwner}", "${repoName}", "${filePath}", "ghe-${scriptId}");
         })();
       `;
   } catch (error) {
