@@ -83,11 +83,10 @@ router.get("/embed-script/:scriptId", async (context) => {
   const [repoOwner, repoName, filePath] = atob(scriptId).split(":");
 
   try {
-    const markdownModule = await Deno.readTextFile("./markdown.esm.js");
     context.response.headers.set("Access-Control-Allow-Origin", "*");
     context.response.headers.set("Content-Type", "application/javascript");
     context.response.body = `
-        ${markdownModule}
+        ${await Deno.readTextFile("./markdown.esm.js")}
   
         (async function() {
           const containerId = "markdown-container";
