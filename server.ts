@@ -85,7 +85,7 @@ router.get("/embed-script/:scriptId", async (context) => {
     context.response.headers.set("Access-Control-Allow-Origin", "*");
     context.response.headers.set("Content-Type", "application/javascript");
     context.response.body = `
-        ${await Deno.readFile("./markdown.esm.js")}
+        ${await Deno.readTextFile("./markdown.esm.js")}
   
         (async function() {
           const containerId = "markdown-container";
