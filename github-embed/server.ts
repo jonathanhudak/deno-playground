@@ -1,5 +1,4 @@
 import { Application, Router } from "oak";
-import "./markdown.esm.js";
 const app = new Application();
 const router = new Router();
 
