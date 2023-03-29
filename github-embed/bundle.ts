@@ -10,7 +10,7 @@ import * as esbuild from "https://deno.land/x/esbuild@v0.17.11/mod.js";
 const result = await esbuild.build({
   plugins: [],
   entryPoints: ["./markdown.ts"],
-  outfile: "./dist/markdown.esm.js",
+  outfile: "./markdown.esm.js",
   bundle: true,
   format: "esm",
 });
