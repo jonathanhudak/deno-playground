@@ -1,6 +1,7 @@
 import { Application, Router } from "oak";
 const app = new Application();
 const router = new Router();
+import { githubUrlToScriptId, createHTMLCodeSnippet } from "./mod.ts";
 
 const head = `
 <head>
@@ -34,12 +35,6 @@ router.get("/", (context) => {
   `;
 });
 
-function githubUrlToScriptId(githubUrl: string) {
-  const [, , , repoOwner, repoName, , ...filePathParts] = githubUrl.split("/");
-  const filePath = filePathParts.join("/");
-  return btoa(`${repoOwner}:${repoName}:${filePath}`);
-}
-
 router.post("/embed-id", async (context) => {
   const body = await context.request.body({ type: "json" }).value;
   const { githubUrl } = body || {};
@@ -62,7 +57,7 @@ router.post("/embed", async (context) => {
   }
 
   const scriptId = githubUrlToScriptId(githubUrl);
-  const snippet = `&lt;div id="ghe-${scriptId}"&gt;&lt;/div&gt;&lt;script type="module" src="${context.request.url.origin}/embed-script/${scriptId}"&gt;&lt;/script&gt;`;
+  const snippet = createHTMLCodeSnippet(scriptId, context.request.url.origin);
 
   context.response.body = `
     <!DOCTYPE html>
