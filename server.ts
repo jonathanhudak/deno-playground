@@ -34,6 +34,22 @@ router.get("/", (context) => {
   `;
 });
 
+function githubUrlToScriptId(githubUrl: string) {
+  const [, , , repoOwner, repoName, , ...filePathParts] = githubUrl.split("/");
+  const filePath = filePathParts.join("/");
+  return btoa(`${repoOwner}:${repoName}:${filePath}`);
+}
+
+router.post("/embed-id", async (context) => {
+  const body = await context.request.body({ type: "json" }).value;
+  const { githubUrl } = body || {};
+
+  context.response.body = {
+    url: githubUrl,
+    scriptId: githubUrlToScriptId(githubUrl),
+  };
+});
+
 // Handle form submission and generate the JavaScript to embed the Markdown
 // Handle form submission and generate the JavaScript to embed the Markdown
 router.post("/embed", async (context) => {
@@ -45,10 +61,7 @@ router.post("/embed", async (context) => {
     return;
   }
 
-  const [, , , repoOwner, repoName, , ...filePathParts] = githubUrl.split("/");
-  const filePath = filePathParts.join("/");
-
-  const scriptId = btoa(`${repoOwner}:${repoName}:${filePath}`);
+  const scriptId = githubUrlToScriptId(githubUrl);
   const snippet = `&lt;div id="ghe-${scriptId}"&gt;&lt;/div&gt;&lt;script type="module" src="${context.request.url.origin}/embed-script/${scriptId}"&gt;&lt;/script&gt;`;
 
   context.response.body = `
